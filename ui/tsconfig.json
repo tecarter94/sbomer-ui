@@ -18,7 +18,7 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "paths": {
-      "@appV2/*": ["src/appV2/*"],
+      "@app/*": ["src/app/*"],
     },
     "importHelpers": true,
     "skipLibCheck": true

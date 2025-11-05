@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import AppV2 from "./appV2";
+import App from "./app";
 
 
 if (process.env.NODE_ENV !== "production") {
@@ -18,6 +18,6 @@ const root = ReactDOM.createRoot(document.getElementById("root") as Element);
 
 root.render(
   <React.StrictMode>
-    <AppV2 basename="/"/>
+    <App basename="/"/>
   </React.StrictMode>
 );
