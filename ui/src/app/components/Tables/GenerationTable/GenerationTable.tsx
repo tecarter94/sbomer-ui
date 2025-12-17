@@ -1,4 +1,4 @@
-import { statusToColor } from '@app/utils/Utils';
+import { resultToColor, statusToColor } from '@app/utils/Utils';
 
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -9,24 +9,29 @@ import { ErrorSection } from '@app/components/Sections/ErrorSection/ErrorSection
 import { NoResultsSection } from '@app/components/Sections/NoResultsSection/NoResultSection';
 import { useGenerations } from '@app/components/Tables/GenerationTable/useGenerations';
 import RelativeTimestamp from '@app/components/UtilsComponents/RelativeTimestamp';
-import { SbomerGeneration } from '@app/types';
 import { DataTable, DataTableSkeleton, Pagination, Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow, Tag } from '@carbon/react';
+import { SbomerGeneration } from '@app/types';
 
 const columnNames = {
   id: 'ID',
   status: 'Status',
+  result: 'Result',
   creationTime: 'Created',
   updatedTime: 'Updated',
   finishedTime: 'Finished',
 };
 
 const headers = [
-  { key: 'id', header: columnNames.id },
-  { key: 'status', header: columnNames.status },
-  { key: 'creationTime', header: columnNames.creationTime },
-  { key: 'updatedTime', header: columnNames.updatedTime },
-  { key: 'finishedTime', header: columnNames.finishedTime },
+  { key: 'id', header: 'ID' },
+  { key: 'status', header: 'Status' },
+  { key: 'result', header: 'Result' },
+  { key: 'creationTime', header: 'Created' },
+  { key: 'updatedTime', header: 'Updated' },
+  { key: 'finishedTime', header: 'Finished' },
 ];
+
+// Derive HeaderKey type from the headers array
+type HeaderKey = (typeof headers)[number]['key'];
 
 export const GenerationTable = () => {
   const navigate = useNavigate();
@@ -76,55 +81,93 @@ export const GenerationTable = () => {
     />
   );
 
+  const rows = (value ?? []).map((g: SbomerGeneration) => ({
+    id: String(g.id),
+    status: g.status ?? 'unknown',
+    result: g.result ?? 'unknown',
+    creationTime: g.created ? new Date(g.created) : undefined,
+    updatedTime: g.updated ? new Date(g.updated) : undefined,
+    finishedTime: g.finished ? new Date(g.finished) : undefined,
+  }));
+
   const table = (
-    <DataTable
-      rows={value || []}
-      headers={headers}
-      render={({ rows, headers }) => (
+    <DataTable rows={rows} headers={headers}>
+      {({
+        rows,
+        headers,
+        getTableProps,
+        getHeaderProps,
+        getRowProps,
+        getCellProps,
+      }) => (
         <TableContainer title="Generations" description="Latest generations">
-          <Table aria-label="Generations">
+          <Table aria-label="Generations" {...getTableProps()}>
             <TableHead>
               <TableRow>
                 {headers.map(header => (
-                  <TableHeader key={header.key}>{header.header}</TableHeader>
+                  <TableHeader {...getHeaderProps({ header })}>
+                    {header.header}
+                  </TableHeader>
                 ))}
               </TableRow>
             </TableHead>
             <TableBody>
-              {value && value.map((generation: SbomerGeneration) => {
-                return (
-                  <TableRow key={generation.id}>
-                    <TableCell>
-                      <Link to={`/generations/${generation.id}`}>
-                        <pre>{generation.id}</pre>
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Tag size='md' type={statusToColor(generation)}>
-                        {generation?.status || 'unknown'}
-                      </Tag>
-                    </TableCell>
-                    <TableCell>
-                      <RelativeTimestamp date={generation.created} />
-                    </TableCell>
-                    <TableCell>
-                      <RelativeTimestamp date={generation.updated} />
-                    </TableCell>
-                    <TableCell>
-                      <RelativeTimestamp date={generation.finished} />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {rows.map(row => (
+                <TableRow {...getRowProps({ row })}>
+                  {row.cells.map(cell => {
+                    const cellKey = cell.info.header;
+                    switch (cellKey) {
+                      case 'id':
+                        return (
+                          <TableCell {...getCellProps({ cell })}>
+                            <Link to={`/generations/${cell.value}`}>
+                              <pre>{cell.value}</pre>
+                            </Link>
+                          </TableCell>
+                        );
+                      case 'status':
+                        return (
+                          <TableCell {...getCellProps({ cell })}>
+                            <Tag size="md" type={statusToColor(cell.value as string)}>
+                              {cell.value || 'unknown'}
+                            </Tag>
+                          </TableCell>
+                        );
+                      case 'result':
+                        return (
+                          <TableCell {...getCellProps({ cell })}>
+                            <Tag size="md" type={resultToColor(cell.value as string)}>
+                              {cell.value || 'unknown'}
+                            </Tag>
+                          </TableCell>
+                        );
+                      case 'creationTime':
+                      case 'updatedTime':
+                      case 'finishedTime':
+                        return (
+                          <TableCell  {...getCellProps({ cell })}>
+                            <RelativeTimestamp date={cell.value as Date | undefined} />
+                          </TableCell>
+                        );
+                      default:
+                        return (
+                          <TableCell {...getCellProps({ cell })}>
+                            {cell.value}
+                          </TableCell>
+                        );
+                    }
+                  })}
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
           {pagination}
         </TableContainer>
       )}
-    />
+    </DataTable>
   );
 
-  const noResults = <NoResultsSection title="No generations found" message="Try adjusting your search criteria." onActionClick={() => { } } actionText={''} />;
+  const noResults = <NoResultsSection title="No generations found" message="Looks like no generations happened." onActionClick={() => { navigate('/') }} actionText={'Take me home'} />;
   const loadingSkeleton = (
     <TableContainer title="Generations" description="Latest generations">
       <DataTableSkeleton
