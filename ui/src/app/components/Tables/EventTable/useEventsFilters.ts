@@ -31,7 +31,7 @@ export function useEventsFilters() {
       setSearchParams((params) => {
         if (query) {
           params.set('query', query);
-        }else {
+        } else {
           params.delete('query');
         }
         if (pageIndex) {
@@ -48,7 +48,7 @@ export function useEventsFilters() {
         return params;
       });
     },
-    [],
+    [setSearchParams],
   );
 
   return { query, pageIndex, pageSize, setFilters };

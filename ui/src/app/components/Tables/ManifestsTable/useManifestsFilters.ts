@@ -16,7 +16,6 @@
 /// limitations under the License.
 ///
 
-
 import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -42,7 +41,7 @@ export function useManifestsFilters() {
         return params;
       });
     },
-    [],
+    [setSearchParams],
   );
 
   return { pageIndex, pageSize, setFilters };

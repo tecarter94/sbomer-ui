@@ -18,21 +18,27 @@
 
 import { SbomerGeneration } from '@app/types';
 
-type CarbonTagType = 'red' | 'green' | 'blue' | 'gray' | 'magenta' | 'purple' | 'cyan' | 'teal' | 'cool-gray' | 'warm-gray' | 'high-contrast' | 'outline';
+type CarbonTagType =
+  | 'red'
+  | 'green'
+  | 'blue'
+  | 'gray'
+  | 'magenta'
+  | 'purple'
+  | 'cyan'
+  | 'teal'
+  | 'cool-gray'
+  | 'warm-gray'
+  | 'high-contrast'
+  | 'outline';
 
-const GenerationStatuses = new Map<
-  string,
-  { description?: string; color: CarbonTagType }
->([
+const GenerationStatuses = new Map<string, { description?: string; color: CarbonTagType }>([
   ['FAILED', { description: 'Failed', color: 'red' }],
   ['GENERATING', { description: 'In progress', color: 'blue' }],
   ['FINISHED', { description: 'Successfully finished', color: 'green' }],
 ]);
 
-const GenerationResults = new Map<
-  string,
-  { description?: string; color: CarbonTagType }
->([
+const GenerationResults = new Map<string, { description?: string; color: CarbonTagType }>([
   ['ERR_CONFIG_MISSING', { description: 'Missing configuration', color: 'red' }],
   ['ERR_GENERAL', { description: 'General error', color: 'red' }],
   ['ERR_CONFIG_INVALID', { description: 'Invalid configuration', color: 'red' }],
@@ -43,10 +49,7 @@ const GenerationResults = new Map<
   ['SUCCESS', { description: 'Success', color: 'green' }],
 ]);
 
-const EventStatuses = new Map<
-  string,
-  { description?: string; color: CarbonTagType }
->([
+const EventStatuses = new Map<string, { description?: string; color: CarbonTagType }>([
   ['FAILED', { description: 'Failed', color: 'red' }],
   ['IGNORED', { description: 'Ignored', color: 'gray' }],
   ['IN_PROGRESS', { description: 'In progress', color: 'blue' }],
@@ -54,7 +57,7 @@ const EventStatuses = new Map<
   ['NEW', { description: 'New', color: 'teal' }],
   ['PROCESSED', { description: 'Processed', color: 'purple' }],
   ['ERROR', { description: 'Error', color: 'red' }],
-  ['INITIALIZED', { description: 'Initialized', color: 'blue' }]
+  ['INITIALIZED', { description: 'Initialized', color: 'blue' }],
 ]);
 
 /**
@@ -64,30 +67,29 @@ const EventStatuses = new Map<
  * @returns A human readable time.
  */
 export function timestampToHumanReadable(millis: number, seconds?: false, suffix?: string): string {
-  var secs = millis / 1000;
-  var d = Math.floor(secs / 3600 / 24);
-  var h = Math.floor((secs - d * 3600 * 24) / 3600);
-  var m = Math.floor((secs % 3600) / 60);
-  var s = Math.floor((secs % 3600) % 60);
+  const secs = millis / 1000;
+  const d = Math.floor(secs / 3600 / 24);
+  const h = Math.floor((secs - d * 3600 * 24) / 3600);
+  const m = Math.floor((secs % 3600) / 60);
 
   if (secs < 60) {
     return 'just now';
   }
 
-  var hrd = '';
+  let hrd = '';
 
   if (d > 3) {
     // More than 3 days: only show days
-    hrd = d + (d == 1 ? ' day' : ' days');
+    hrd = d + (d === 1 ? ' day' : ' days');
   } else if (d >= 1) {
     // 1-3 days: show days and hours
-    var dDisplay = d + (d == 1 ? ' day' : ' days');
-    var hDisplay = h > 0 ? ' ' + h + (h == 1 ? ' hour' : ' hours') : '';
+    const dDisplay = d + (d === 1 ? ' day' : ' days');
+    const hDisplay = h > 0 ? ' ' + h + (h === 1 ? ' hour' : ' hours') : '';
     hrd = dDisplay + hDisplay;
   } else {
     // Less than 1 day: show hours and minutes
-    var hDisplay = h > 0 ? h + (h == 1 ? ' hour' : ' hours') : '';
-    var mDisplay = m > 0 ? (h > 0 ? ' ' : '') + m + (m == 1 ? ' minute' : ' minutes') : '';
+    const hDisplay = h > 0 ? h + (h === 1 ? ' hour' : ' hours') : '';
+    const mDisplay = m > 0 ? (h > 0 ? ' ' : '') + m + (m === 1 ? ' minute' : ' minutes') : '';
     hrd = hDisplay + mDisplay;
 
     // If no hours or minutes, show "just now"
@@ -107,26 +109,24 @@ export function timestampToHumanReadable(millis: number, seconds?: false, suffix
   return hrd;
 }
 
-
-
 export function statusToDescription(request: SbomerGeneration): string {
-  var resolved = GenerationStatuses.get(request.status);
+  const resolved = GenerationStatuses.get(request.status);
 
   return resolved?.description ?? request.status;
 }
 
 export function eventStatusToDescription(eventStatus: string): string {
-  var resolved = EventStatuses.get(eventStatus);
+  const resolved = EventStatuses.get(eventStatus);
 
   return resolved?.description ?? eventStatus;
 }
 
 export function resultToDescription(request: SbomerGeneration): string {
-  if (request.result == null) {
+  if (request.result === null) {
     return 'In progress';
   }
 
-  var resolved = GenerationResults.get(request.result);
+  const resolved = GenerationResults.get(request.result);
 
   return resolved?.description ?? request.result;
 }
@@ -140,19 +140,19 @@ export function statusToColor(status: string): CarbonTagType {
 }
 
 export function eventStatusToColor(status: string): CarbonTagType {
-  var resolved = EventStatuses.get(status);
+  const resolved = EventStatuses.get(status);
 
   return resolved?.color ?? 'gray';
 }
 
 export function resultToColor(result: string): CarbonTagType {
-  var resolved = GenerationResults.get(result);
+  const resolved = GenerationResults.get(result);
 
   return resolved?.color ?? 'warm-gray';
 }
 
 export function isInProgress(status: string): boolean {
-  if (status == 'FINISHED' || status == 'FAILED') {
+  if (status === 'FINISHED' || status === 'FAILED') {
     return false;
   }
 
@@ -160,7 +160,7 @@ export function isInProgress(status: string): boolean {
 }
 
 export function isSuccess(status: string): boolean {
-  return status == 'FINISHED' ? true : false;
+  return status === 'FINISHED';
 }
 
 export function extractQueryErrorMessageDetails(error: any): { message: string; details?: string } {
@@ -174,6 +174,7 @@ export function extractQueryErrorMessageDetails(error: any): { message: string; 
           details: Array.isArray(json.details) ? json.details.join(', ') : json.details,
         };
       } catch {
+        // JSON parse failed, fall through to return original message
       }
     }
     return { message: error.message };
@@ -182,7 +183,9 @@ export function extractQueryErrorMessageDetails(error: any): { message: string; 
   if (typeof error?.message === 'object') {
     return {
       message: error.message.message || 'Unknown error',
-      details: Array.isArray(error.message.details) ? error.message.details.join(', ') : error.message.details,
+      details: Array.isArray(error.message.details)
+        ? error.message.details.join(', ')
+        : error.message.details,
     };
   }
 

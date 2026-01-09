@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { createBrowserRouter, RouteObject, RouterProvider } from 'react-router-dom';
+import { RouteObject, RouterProvider, createBrowserRouter } from 'react-router-dom';
 
 import { IAppRoute, routes } from './routes';
 import './app.css';
@@ -7,14 +7,14 @@ import './carbon-styles.scss';
 
 const App = ({ basename }: { basename: string }) => {
   return (
-        <RouterProvider
-          router={createBrowserRouter(
-            routes
-              .filter((route) => !route.routes)
-              .map((route: IAppRoute) => ({ element: route.element, path: route.path }) as RouteObject),
-            { basename: basename }
-          )}
-        />
+    <RouterProvider
+      router={createBrowserRouter(
+        routes
+          .filter((route) => !route.routes)
+          .map((route: IAppRoute) => ({ element: route.element, path: route.path }) as RouteObject),
+        { basename: basename },
+      )}
+    />
   );
 };
 

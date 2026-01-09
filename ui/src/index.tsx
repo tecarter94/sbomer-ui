@@ -1,23 +1,11 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./app";
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './app';
 
-
-if (process.env.NODE_ENV !== "production") {
-  const config = {
-    rules: [
-      {
-        id: 'color-contrast',
-        enabled: false
-      }
-    ]
-  };
-}
-
-const root = ReactDOM.createRoot(document.getElementById("root") as Element);
+const root = ReactDOM.createRoot(document.getElementById('root') as Element);
 
 root.render(
   <React.StrictMode>
-    <App basename="/"/>
-  </React.StrictMode>
+    <App basename="/" />
+  </React.StrictMode>,
 );
