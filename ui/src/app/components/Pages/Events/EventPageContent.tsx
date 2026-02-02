@@ -1,6 +1,7 @@
-import { useRequestEventManifest } from '@app/components/Tables/EventTable/useEventManifest';
+import { useEvent } from '@app/components/Tables/EventTable/useEventManifest';
 import {
   CodeSnippet,
+  DataTableSkeleton,
   Heading,
   SkeletonText,
   Stack,
@@ -9,31 +10,126 @@ import {
   StructuredListHead,
   StructuredListRow,
   StructuredListWrapper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableHeader,
+  TableRow,
   Tag,
 } from '@carbon/react';
 
 import { ErrorSection } from '@app/components/Sections/ErrorSection/ErrorSection';
-import { MetadataOverview } from '@app/components/UtilsComponents/MetadataOverview';
 import RelativeTimestamp from '@app/components/UtilsComponents/RelativeTimestamp';
-import { eventStatusToColor } from '@app/utils/Utils';
+import { eventStatusToColor, resultToColor, statusToColor } from '@app/utils/Utils';
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+import { useEventGeneration } from '@app/components/Tables/EventTable/useEventGeneration';
+import { SbomerGeneration } from '@app/types';
+
+const generationHeaders = [
+  { key: 'id', header: 'ID' },
+  { key: 'status', header: 'Status' },
+  { key: 'result', header: 'Result' },
+  { key: 'creationTime', header: 'Created' },
+  { key: 'updatedTime', header: 'Updated' },
+  { key: 'finishedTime', header: 'Finished' },
+];
 
 export const EventPageContent = () => {
   const { id } = useParams<{ id: string }>();
-  const [{ request, loading, error }] = useRequestEventManifest(id!);
+  const [{ request, loading, error }] = useEvent(id!);
+  const [{ value: generationsValue, loading: generationsLoading, error: generationsError }] =
+    useEventGeneration(id!);
 
   if (error) {
     return <ErrorSection title="Could not load event details" message={error.message} />;
   }
 
-  if (loading) {
+  // Only show skeleton when we have no data yet
+  if (loading && !request) {
     return <SkeletonText />;
   }
 
   if (!request) {
     return null;
   }
+
+  const generationRows =
+    (generationsValue?.data ?? []).map((g: SbomerGeneration) => ({
+      id: String(g.id),
+      status: g.status ?? 'unknown',
+      result: g.result ?? 'unknown',
+      creationTime: g.created ? new Date(g.created) : undefined,
+      updatedTime: g.updated ? new Date(g.updated) : undefined,
+      finishedTime: g.finished ? new Date(g.finished) : undefined,
+    })) ?? [];
+
+  const generationsTable = (
+    <TableContainer title="Generations" description="Generations for this event">
+      <Table aria-label="Event Generations">
+        <TableHead>
+          <TableRow>
+            {generationHeaders.map((header) => (
+              <TableHeader key={header.key}>{header.header}</TableHeader>
+            ))}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {generationRows.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell>
+                <Link to={`/generations/${row.id}`}>
+                  <pre>{row.id}</pre>
+                </Link>
+              </TableCell>
+              <TableCell>
+                <Tag size="md" type={statusToColor(row.status)}>
+                  {row.status || 'unknown'}
+                </Tag>
+              </TableCell>
+              <TableCell>
+                <Tag size="md" type={resultToColor(row.result)}>
+                  {row.result || 'unknown'}
+                </Tag>
+              </TableCell>
+              <TableCell>
+                <RelativeTimestamp date={row.creationTime} />
+              </TableCell>
+              <TableCell>
+                <RelativeTimestamp date={row.updatedTime} />
+              </TableCell>
+              <TableCell>
+                <RelativeTimestamp date={row.finishedTime} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+
+  const generationsLoadingSkeleton = (
+    <TableContainer title="Generations" description="Generations for this event">
+      <DataTableSkeleton
+        columnCount={generationHeaders.length}
+        showHeader={false}
+        showToolbar={false}
+        rowCount={5}
+      />
+    </TableContainer>
+  );
+
+  const generationsSection = generationsError ? (
+    <ErrorSection title="Could not load generations" message={generationsError.message} />
+  ) : generationsLoading && !generationsValue ? (
+    generationsLoadingSkeleton
+  ) : generationRows.length === 0 ? (
+    <p>No generations found for this event.</p>
+  ) : (
+    generationsTable
+  );
 
   return (
     <Stack gap={7}>
@@ -66,32 +162,6 @@ export const EventPageContent = () => {
             </StructuredListCell>
           </StructuredListRow>
           <StructuredListRow>
-            <StructuredListCell>Updated</StructuredListCell>
-            <StructuredListCell>
-              {request.updated ? (
-                <Stack gap={2}>
-                  <RelativeTimestamp date={request.updated} />
-                  <span>{request.updated.toISOString()}</span>
-                </Stack>
-              ) : (
-                'N/A'
-              )}
-            </StructuredListCell>
-          </StructuredListRow>
-          <StructuredListRow>
-            <StructuredListCell>Finished</StructuredListCell>
-            <StructuredListCell>
-              {request.finished ? (
-                <Stack gap={2}>
-                  <RelativeTimestamp date={request.finished} />
-                  <span>{request.finished.toISOString()}</span>
-                </Stack>
-              ) : (
-                'N/A'
-              )}
-            </StructuredListCell>
-          </StructuredListRow>
-          <StructuredListRow>
             <StructuredListCell>Status</StructuredListCell>
             <StructuredListCell>
               <Tag size="md" type={eventStatusToColor(request.status)}>
@@ -101,7 +171,6 @@ export const EventPageContent = () => {
           </StructuredListRow>
         </StructuredListBody>
       </StructuredListWrapper>
-      <MetadataOverview metadata={request.metadata} redirectPrefix="events" />
       <Stack gap={5}>
         <Heading>Raw JSON</Heading>
         <CodeSnippet type="multi">
@@ -117,6 +186,7 @@ export const EventPageContent = () => {
           )}
         </CodeSnippet>
       </Stack>
+      {generationsSection}
     </Stack>
   );
 };

@@ -17,7 +17,7 @@
 ///
 
 import axios, { Axios, AxiosError } from 'axios';
-import { SbomerApi, SbomerEvent, SbomerGeneration, SbomerManifest, SbomerStats } from '../types';
+import { SbomerApi, SbomerEvent, SbomerGeneration, SbomerStats } from '../types';
 
 type Options = {
   baseUrl: string;
@@ -57,89 +57,8 @@ export class DefaultSbomerApi implements SbomerApi {
     );
   }
 
-  async getManifests(pagination: {
-    pageSize: number;
-    pageIndex: number;
-  }): Promise<{ data: SbomerManifest[]; total: number }> {
-    const response = await fetch(
-      `${this.baseUrl}/api/v1beta2/manifests?pageSize=${pagination.pageSize}&pageIndex=${pagination.pageIndex}`,
-    );
-
-    if (response.status != 200) {
-      const body = await response.text();
-
-      throw new Error(
-        'Failed fetching manifests from SBOMer, got: ' +
-          response.status +
-          " response: '" +
-          body +
-          "'",
-      );
-    }
-
-    const data = await response.json();
-
-    const sboms: SbomerManifest[] = [];
-
-    if (data.content) {
-      data.content.forEach((sbom: any) => {
-        sboms.push(new SbomerManifest(sbom));
-      });
-    }
-
-    return { data: sboms, total: data.totalHits };
-  }
-
-  async getManifestsForGeneration(
-    generationId: string,
-  ): Promise<{ data: SbomerManifest[]; total: number }> {
-    const response = await fetch(
-      `${this.baseUrl}/api/v1beta2/manifests?query=generation.id==${generationId}&pageSize=20&pageIndex=0`,
-    );
-
-    if (response.status != 200) {
-      const body = await response.text();
-
-      throw new Error(
-        'Failed fetching manifests from SBOMer, got: ' +
-          response.status +
-          " response: '" +
-          body +
-          "'",
-      );
-    }
-
-    const data = await response.json();
-
-    const sboms: SbomerManifest[] = [];
-
-    if (data.content) {
-      data.content.forEach((sbom: any) => {
-        sboms.push(new SbomerManifest(sbom));
-      });
-    }
-
-    return { data: sboms, total: data.totalHits };
-  }
-
-  async getManifest(id: string): Promise<SbomerManifest> {
-    const response = await this.client.get(`/api/v1beta2/manifests/${id}`);
-    return new SbomerManifest(response.data);
-  }
-
-  async getManifestJson(id: string): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/api/v1beta2/manifests/${id}/bom`);
-    if (response.status !== 200) {
-      const body = await response.text();
-      throw new Error(
-        'Failed to fetch manifest JSON, got: ' + response.status + " response: '" + body + "'",
-      );
-    }
-    return await response.json();
-  }
-
   async getLogPaths(generationId: string): Promise<Array<string>> {
-    const response = await this.client.get(`/api/v1beta2/generations/${generationId}/logs`);
+    const response = await this.client.get(`/api/v1/generations/${generationId}/logs`);
 
     if (response.status != 200) {
       throw new Error(
@@ -156,7 +75,7 @@ export class DefaultSbomerApi implements SbomerApi {
   }
 
   async stats(): Promise<SbomerStats> {
-    const response = await fetch(`${this.baseUrl}/api/v1beta2/stats`);
+    const response = await fetch(`${this.baseUrl}/api/v1/stats`);
 
     if (response.status != 200) {
       const body = await response.text();
@@ -174,7 +93,7 @@ export class DefaultSbomerApi implements SbomerApi {
     pageIndex: number;
   }): Promise<{ data: SbomerGeneration[]; total: number }> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1beta2/generations?pageSize=${pagination.pageSize}&pageIndex=${pagination.pageIndex}`,
+      `${this.baseUrl}/api/v1/generations?pageSize=${pagination.pageSize}&pageIndex=${pagination.pageIndex}`,
     );
 
     if (response.status != 200) {
@@ -203,7 +122,7 @@ export class DefaultSbomerApi implements SbomerApi {
   }
 
   async getGeneration(id: string): Promise<SbomerGeneration> {
-    const response = await this.client.get(`/api/v1beta2/generations/${id}`);
+    const response = await this.client.get(`/api/v1/generations/${id}`);
     return new SbomerGeneration(response.data);
   }
 
@@ -215,7 +134,7 @@ export class DefaultSbomerApi implements SbomerApi {
     query: string,
   ): Promise<{ data: SbomerEvent[]; total: number }> {
     const response = await fetch(
-      `${this.baseUrl}/api/v1beta2/events/?pageSize=${pagination.pageSize}&pageIndex=${pagination.pageIndex}&query=${encodeURIComponent(query)}`,
+      `${this.baseUrl}/api/v1/requests/?pageSize=${pagination.pageSize}&pageIndex=${pagination.pageIndex}&query=${encodeURIComponent(query)}`,
     );
 
     if (response.status != 200) {
@@ -242,7 +161,7 @@ export class DefaultSbomerApi implements SbomerApi {
   }
 
   async getEvent(id: string): Promise<SbomerEvent> {
-    const response = await this.client.get(`/api/v1beta2/events/${id}`);
+    const response = await this.client.get(`/api/v1/requests/${id}`);
     return new SbomerEvent(response.data);
   }
 
@@ -255,7 +174,7 @@ export class DefaultSbomerApi implements SbomerApi {
     // Loop through pages until all content is retrieved
     while (true) {
       const response = await fetch(
-        `${this.baseUrl}/api/v1beta2/generations?query=request.id=eq=${id}&sort=creationTime=desc=&pageSize=${pageSize}&pageIndex=${pageIndex}`,
+        `${this.baseUrl}/api/v1/requests/${id}/generations?pageSize=${pageSize}&pageIndex=${pageIndex}`,
       );
 
       if (response.status !== 200) {
@@ -270,7 +189,6 @@ export class DefaultSbomerApi implements SbomerApi {
       }
 
       const data = await response.json();
-
       // Update totalHits on first page
       if (pageIndex === 0) {
         totalHits = data.totalHits;

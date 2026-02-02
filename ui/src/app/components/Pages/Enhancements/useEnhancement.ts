@@ -17,39 +17,44 @@
 ///
 
 import { DefaultSbomerApi } from '@app/api/DefaultSbomerApi';
-import { useCallback } from 'react';
-import { useAsyncRetry } from 'react-use';
+import { SbomerEnhancement } from '@app/types';
+import useAsyncRetry from 'react-use/lib/useAsyncRetry';
 
-export function useManifest(id: string) {
+export function useEnhancement(id: string) {
   const sbomerApi = DefaultSbomerApi.getInstance();
-  const getManifest = useCallback(
-    async (id: string) => {
-      try {
-        return await sbomerApi.getManifest(id);
-      } catch (e) {
-        return Promise.reject(e);
-      }
-    },
-    [sbomerApi],
-  );
 
-  const {
-    loading,
-    value: request,
-    error,
-  } = useAsyncRetry(
-    () =>
-      getManifest(id).then((data) => {
-        return data;
-      }),
-    [getManifest, id],
-  );
+  const getEnhancement = async (id: string) => {
+    try {
+      const response = await fetch(`${sbomerApi.getBaseUrl()}/api/v1/enhancements/${id}`);
+
+      if (response.status !== 200) {
+        const body = await response.text();
+        throw new Error(
+          'Failed fetching enhancement from SBOMer, got: ' +
+            response.status +
+            " response: '" +
+            body +
+            "'",
+        );
+      }
+
+      const data = await response.json();
+      return new SbomerEnhancement(data);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  };
+
+  const { loading, value, error, retry } = useAsyncRetry(() => getEnhancement(id), [id]);
 
   return [
     {
-      request,
+      request: value,
       loading,
       error,
+    },
+    {
+      retry,
     },
   ] as const;
 }

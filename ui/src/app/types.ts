@@ -66,13 +66,21 @@ export type SbomerStats = {
 
 export class SbomerGeneration {
   public id: string;
-  public status: string;
-  public result: string;
-  public reason: string;
+  public generatorName: string;
+  public generatorVersion: string;
   public created: Date;
   public updated?: Date;
   public finished?: Date;
-  public request?: object;
+  public status: string;
+  public result: string;
+  public reason: string;
+  public requestId: string;
+  public targetType: string;
+  public targetIdentifier: string;
+
+  // todo
+  // generationSBomUrls
+  // enhancements
   public metadata?: Map<string, string>;
 
   constructor(payload: any) {
@@ -82,13 +90,46 @@ export class SbomerGeneration {
     this.reason = payload.reason;
 
     this.created = new Date(payload.created);
-
     this.updated = payload.updated ? new Date(payload.updated) : undefined;
-
     this.finished = payload.finished ? new Date(payload.finished) : undefined;
 
-    this.request = payload.request;
+    this.requestId = payload.requestId;
     this.metadata = payload.metadata ? new Map(Object.entries(payload.metadata)) : undefined;
+    this.generatorName = payload.generatorName;
+    this.generatorVersion = payload.generatorVersion;
+    this.requestId = payload.requestId;
+    this.targetType = payload.targetType;
+    this.targetIdentifier = payload.targetIdentifier;
+  }
+}
+
+export class SbomerEnhancement {
+  public id: string;
+  public status: string;
+  public created: Date;
+  public updated?: Date;
+  public finished?: Date;
+  public result?: string;
+  public reason?: string;
+  public generationId?: string;
+  public requestId?: string;
+  public enhancerName?: string;
+  public enhancerVersion?: string;
+
+  constructor(payload: any) {
+    this.id = payload.id;
+    this.status = payload.status;
+
+    this.created = new Date(payload.created);
+    this.updated = payload.updated ? new Date(payload.updated) : undefined;
+    this.finished = payload.finished ? new Date(payload.finished) : undefined;
+
+    this.result = payload.result;
+    this.reason = payload.reason;
+    this.generationId = payload.generationId;
+    this.requestId = payload.requestId;
+    this.enhancerName = payload.enhancerName;
+    this.enhancerVersion = payload.enhancerVersion;
   }
 }
 
@@ -106,28 +147,13 @@ export class SbomerManifest {
 
 export class SbomerEvent {
   public id: string;
-  public parent: any;
   public created: Date;
-  public updated: Date;
-  public finished?: Date;
   public status: string;
-  public reason: string;
-  public metadata?: Map<string, string>;
-  public request?: object;
-  public generations: SbomerGeneration[] = [];
 
   constructor(payload: any) {
     this.id = payload.id;
-    this.parent = payload.parent;
-    this.created = new Date(payload.created);
-    this.updated = new Date(payload.updated);
-    if (payload.finished) {
-      this.finished = new Date(payload.finished);
-    }
+    this.created = new Date(payload.creationDate);
     this.status = payload.status;
-    this.reason = payload.reason;
-    this.metadata = payload.metadata ? new Map(Object.entries(payload.metadata)) : undefined;
-    this.request = payload.request;
   }
 }
 
@@ -145,19 +171,7 @@ export type SbomerApi = {
     pageIndex: number;
   }): Promise<{ data: SbomerGeneration[]; total: number }>;
 
-  getManifests(_pagination: {
-    pageSize: number;
-    pageIndex: number;
-  }): Promise<{ data: SbomerManifest[]; total: number }>;
-  getManifestsForGeneration(
-    _generationId: string,
-  ): Promise<{ data: SbomerManifest[]; total: number }>;
-
   getGeneration(_id: string): Promise<SbomerGeneration>;
-
-  getManifest(_id: string): Promise<SbomerManifest>;
-
-  getManifestJson(_id: string): Promise<string>;
 
   getEvents(
     _pagination: {

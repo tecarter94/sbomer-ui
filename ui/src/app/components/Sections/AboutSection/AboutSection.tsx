@@ -11,14 +11,14 @@ export const AboutSection = () => {
         for products.
       </p>
       <ButtonSet>
-        <Button kind="primary" as={Link} to="generations">
+        <Button kind="primary" as={Link} to="events">
+          Events
+        </Button>
+        <Button kind="secondary" as={Link} to="generations">
           Generations
         </Button>
-        <Button kind="secondary" as={Link} to="manifests">
-          Manifests
-        </Button>
-        <Button kind="tertiary" as={Link} to="events">
-          Events
+        <Button kind="tertiary" as={Link} to="enhancements">
+          Enhancements
         </Button>
       </ButtonSet>
     </>
